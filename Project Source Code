@@ -1,0 +1,70 @@
+import RPi.GPIO as GPIO
+import time
+import subprocess
+import smtplib
+import os
+
+GPIO.setmode(GPIO.BCM)
+
+MOTION_SENSOR = 23
+LED_LIGHT = 24
+
+GPIO.setup(MOTION_SENSOR, GPIO.IN)
+GPIO.setup(LED_LIGHT, GPIO.OUT)
+
+GMAIL_USER = 'legowars503@gmail.com' 
+GMAIL_PASSWORD = 'pwptbygbduyfeqjl'
+
+COOLDOWN_PERIOD = 600
+
+def start():
+    future = 0
+    try:
+        time.sleep(2) # to stabilize sensor
+        while True:
+            if GPIO.input(MOTION_SENSOR):
+                print("Motion Detected...")
+                if future == 0
+                    now = time.time()
+                    future = now + COOLDOWN_PERIOD
+                    send_email()       
+                flash_led()
+                time.sleep(.5) #to avoid multiple detection 
+                if time.time() < future:
+                    continue
+                else:
+                    future = 0
+            time.sleep(0.1) #loop delay, should be less than detection delay
+    except:
+        GPIO.cleanup()
+    
+    
+def flash_led():
+    GPIO.output(LED_LIGHT, True)
+    time.sleep(1)
+    GPIO.output(LED_LIGHT, False)
+    
+def send_email():
+    sent_from = GMAIL_USER
+    to = [GMAIL_USER]  
+    subject = 'Alert Homeowner'  
+    body = 'Motion Detected'
+
+    email_text = """\  
+    From: %s  
+    To: %s  
+    Subject: %s
+
+    %s
+    """ % (sent_from, ", ".join(to), subject, body)
+
+    try:  
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(GMAIL_USER, GMAIL_PASSWORD)
+        server.sendmail(sent_from, to, email_text)
+        server.close()
+
+        print 'Email sent!'
+    except:  
+        print 'Something went wrong...'
